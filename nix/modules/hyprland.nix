@@ -178,7 +178,8 @@ binde = , XF86MonBrightnessUp, exec, ${pkgs.brightnessctl}/bin/brightnessctl set
 binde = , XF86MonBrightnessDown, exec, ${pkgs.brightnessctl}/bin/brightnessctl set 5%-
 
 # --- Local Overrides ---
-source = ~/.config/hypr/monitors.conf
-source = ~/.config/hypr/workspaces.conf
+# Uncomment these if you create the files to override default monitor/workspace behavior
+# source = ~/.config/hypr/monitors.conf
+# source = ~/.config/hypr/workspaces.conf
   '';
 }
