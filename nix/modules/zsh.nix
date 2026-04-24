@@ -117,7 +117,7 @@
       # [New] Clipboard copy alias
       tocb = "xclip -selection clipboard";
 
-      hms = "home-manager switch --flake ~/home_env_dotfiles/#default --impure";
+      hms = "home-manager switch --flake ~/home_env_dotfiles-gui/#default --impure";
       vi = "nvim";
       vim = "nvim";
       zj = "zellij";
