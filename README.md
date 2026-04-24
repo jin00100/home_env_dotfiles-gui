@@ -1,108 +1,72 @@
-1# 🚀 Dotfiles (Nix Home Manager)
+# 🚀 Dotfiles (Nix Home Manager + Hyprland)
 
-**jin**'s declarative development environment configuration managed by **Nix Home Manager**.
-This setup supports both **Native Linux** and **WSL** with a single, unified configuration, ensuring a consistent and high-performance workflow.
+**jin**'s declarative development environment, blending a powerful **terminal-centric workflow** with a sleek **Hyprland GUI desktop**, all managed by Nix Home Manager.
+
+This setup supports both **Native Linux** and **WSL** with a single, unified configuration, ensuring a consistent and high-performance experience.
 
 ## ✨ Features
 
-- **⚡ Shell:** Zsh optimized with **Starship (Jetpack Theme)**. Auto-detects SSH sessions and displays a special Starship prompt (Starship-SSH).
-- **🛠️ Modern Core Utils & DevOps:** Replaces legacy tools with modern Rust alternatives and essential DevOps data processors.
-  - `ls` -> `eza` (Icons & Git status)
-  - `cd` -> `zoxide` (Smarter navigation, overwrites default `cd`)
-  - `cat` -> `bat` (Syntax highlighting)
-  - `find` -> `fd` / `grep` -> `ripgrep`
-  - `top` -> `btop` (Modern system monitor)
-  - `jq` / `yq` (JSON and YAML processors)
-  - `direnv` -> **`direnv` (Nix-direnv integrated)**
-- **💻 Terminal Multiplexer:** **Zellij** (Modern Rust-based) pre-configured.
-  - Auto-start on launch (except VS Code).
-  - Prefix: `Ctrl + g` (Locked/Normal toggle).
-  - Modern UI with Custom Cyber-Blue theme and helpful status bars.
-  - Seamless navigation and integration with Neovim.
-- **📝 Editor:** **Neovim (DevOps Enhanced)**.
-  - Lazy loading, Telescope, Neo-tree, Treesitter.
-  - Advanced LSP (C++, Go, Node, YAML, Bash, Docker).
-  - Snippets (`friendly-snippets`), Beautiful Diagnostics UI.
-  - **OSC 52 integration**: Seamless clipboard synchronization when working via SSH.
+### 🖥️ GUI Desktop Environment
+- **🪟 Window Manager:** **Hyprland** (Wayland-native) with hardware-accelerated animations and blur effects.
+- **🚀 App Launcher & Bar:** **Noctalia Shell** provides a unified app launcher, status bar, and notification center.
+- **🔒 Security:** **Hyprlock** & **Hypridle** for automated screen locking and power management.
+- **🎨 Global Theme:** A consistent and pleasant **Ayu-Dark** and **TokyoNight** aesthetic across GTK, icons, and terminal applications.
+- **📸 Screenshots:** Fullscreen and regional screenshot capabilities via **Grim**, **Slurp**, and **Swappy**.
+
+### ⚡ Terminal & Shell
+- **🐚 Shells:** **Zsh** (main, with custom Gemini welcome), **Bash**, and **Nushell**, all optimized with **Starship (Jetpack Theme)** and auto-detection for SSH sessions.
+- **🛠️ Modern Core Utils:** Replaces legacy tools with modern Rust alternatives like `eza`, `zoxide`, `bat`, `fd`, `ripgrep`, `btop`, `yazi`, and `atuin`.
+- **💻 Terminal Multiplexer:** **Zellij** (Modern Rust-based) pre-configured with a custom `cyber-blue` theme and auto-start.
+- **📝 Editor (Neovim):** Your custom **DevOps Enhanced** Neovim setup remains intact, with its TokyoNight theme, OSC 52 clipboard, advanced LSP, and snippets.
 - **🤖 AI:** Auto-installation of `@google/gemini-cli`.
-- **📦 Modular:** Clean file structure separated by function (`modules/*.nix`).
 
 ## 📂 Directory Structure
 
+Your directory structure has been expanded to include all the new modules:
 ```text
 ~/home_env_dotfiles
-├── flake.nix             # Entry point (Unified profile)
+├── flake.nix
 └── nix
-    ├── home.nix          # Main loader
+    ├── home.nix
     └── modules
-        ├── shell.nix     # Zsh, Starship, Aliases, Zellij autostart, Direnv
-        ├── starship.toml # Jetpack theme config
-        ├── neovim.nix    # Editor config
-        ├── zellij.nix    # Modern Multiplexer config
-        ├── packages.nix  # System packages & Installation scripts
-        └── git.nix       # Git user config
+        ├── (Your core modules: neovim, zellij, zsh, etc.)
+        └── (New GUI modules: hyprland, noctalia, theme, etc.)
 ```
 
 ## 🚀 Installation
 
-This project includes an all-in-one setup script (`install.sh`) that will automatically:
-1. Install Nix Package Manager and enable Flakes.
-2. Configure variables based on your username (`jin`, etc.).
-3. Download and apply the `zsh`, `zellij`, and `neovim` configurations.
-4. Auto-install Node.js via `fnm`.
-5. Set `zsh` as your default shell.
+Your `install.sh` script is now an all-in-one setup tool that will automatically:
+1. **(Ubuntu/Debian Only)** Install system-level dependencies like `git`, `curl`, and the `hyprland` engines via `apt`.
+2. Install Nix Package Manager and enable Flakes if not already present.
+3. Apply all your terminal and GUI configurations using Home Manager.
+4. Set up `fnm` and `zsh` as the default shell.
 
-### Option 1: Quick Install
-If you haven't cloned this repository yet, run these commands to clone and install everything:
-
+Just run the script in a clean Ubuntu Desktop environment:
 ```bash
-git clone https://github.com/jin00100/home_env_dotfiles.git ~/home_env_dotfiles
-cd ~/home_env_dotfiles
 chmod +x install.sh
 ./install.sh
 ```
 
-*(Note: If Nix is not already installed on your system, the script will install it for you and may pause, asking you to restart your terminal. Simply restart the terminal, then run `./install.sh` again to finish the setup.)*
+## ⌨️ Keybindings Cheat Sheet
 
-### Option 2: Local Install
-If you have already cloned the repository manually:
+### Hyprland Desktop
+| Shortcut | Action |
+| :--- | :--- |
+| **`Super + Enter`** | Launch **Ghostty** terminal |
+| **`Super + Space`** | Launch **Noctalia** (App Launcher) |
+| **`Super + Q`** | Close active window |
+| **`Super + F`** | Toggle Fullscreen |
+| **`Super + h/j/k/l`** | Move focus between windows |
+| **`Super + Shift + h/j/k/l`**| Move active window |
+| **Super + Escape** | Lock Screen (**Hyprlock**) |
+| **Print Screen** | Capture Whole Screen |
+| **Super + Shift + S** | Capture Area & Edit (**Swappy**) |
 
-```bash
-cd ~/home_env_dotfiles
-chmod +x install.sh
-./install.sh
-```
-
-## ⌨️ Cheat Sheet
-
-| Command | Action | Alias |
-| :--- | :--- | :--- |
-| `hms` | Apply Nix configuration changes | `home-manager switch ...` |
-| `nix-clean` | Clean up old Nix generations and garbage collect | `nix-env --delete-generations old...` |
-| `ll` / `lt` | List files (Grid / Tree view) | `eza ...` |
-| `zj` | Start Zellij session | - |
-| `zj_shortcuts` | Show Zellij keybindings summary | - |
-| `vi` / `vim` | Open Neovim | `nvim` |
-| `Space + f` | Find files (Telescope) | - |
-| `Space + g` | Live Grep (Telescope) | - |
-| `Ctrl + n` | Toggle File Explorer | `Neotree` |
-| `Ctrl + g` | Zellij Prefix (Lock/Unlock) | - |
-| `Alt + h/j/k/l` | Navigate between Zellij panes | - |
-
-## 🔄 Maintenance
-
-### Update Packages & Configuration
-
-To update all tools and environments managed by Nix and Home Manager to their latest versions, either run the `./update.sh` script or execute the following commands in order:
-
-```bash
-# 1. Update the package recipes (flake.lock) to the latest state
-nix flake update
-
-# 2. Apply and build the updated configurations
-hms
-```
-
----
-
-**Note:** Ghostty configuration is managed, but the binary should be installed manually on Native Linux.
+### Terminal (Zellij + Neovim)
+Your existing terminal cheat sheet remains the same!
+| Command / Shortcut | Action |
+| :--- | :--- |
+| `hms` | Apply Nix configuration changes |
+| `Ctrl + g` | Zellij Prefix (Lock/Unlock for Neovim) |
+| `Alt + h/j/k/l` | Navigate between Zellij panes |
+| `Space + f` (in Neovim) | Find files (Telescope) |
