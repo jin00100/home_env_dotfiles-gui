@@ -1,0 +1,14 @@
+mkdir -p ~/dotfiles/nix
+cd ~/dotfiles
+git init
+
+# .gitignore 생성
+cat <<EOF > .gitignore
+result
+result-*
+.direnv
+.envrc
+*.swp
+node_modules
+.npm-global
+EOF
