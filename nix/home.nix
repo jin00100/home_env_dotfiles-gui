@@ -28,6 +28,12 @@
     ./modules/nushell.nix
   ];
 
+  # [Fix] Create empty config files to prevent Hyprland from crashing on first start
+  home.file = {
+    ".config/hypr/monitors.conf".text = "";
+    ".config/hypr/workspaces.conf".text = "";
+  };
+
   targets.genericLinux.enable = true;
   fonts.fontconfig.enable = true;
 
