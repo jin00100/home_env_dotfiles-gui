@@ -52,9 +52,9 @@ chmod +x install.sh
 ### Hyprland Desktop
 | Shortcut | Action |
 | :--- | :--- |
-| **`Super + Enter`** | Launch **Ghostty** terminal |
+| **`Ctrl + Alt + T`** | Launch **Ghostty** terminal |
+| **`Ctrl + Alt + Q`** | Close active window |
 | **`Super + Space`** | Launch **Noctalia** (App Launcher) |
-| **`Super + Q`** | Close active window |
 | **`Super + F`** | Toggle Fullscreen |
 | **`Super + h/j/k/l`** | Move focus between windows |
 | **`Super + Shift + h/j/k/l`**| Move active window |

@@ -14,17 +14,22 @@ monitor=,preferred,auto,1
 $mainMod = SUPER
 
 # --- Keybindings (Direct & Reliable) ---
-# Terminal & Launcher
-bind = $mainMod, Return, exec, ${pkgs.ghostty}/bin/ghostty
+# Terminal & Close Window (Your custom bindings)
+bind = CONTROL ALT, T, exec, ${pkgs.ghostty}/bin/ghostty
+bind = CONTROL ALT, Q, killactive
+
+# Launcher, Lock Screen, and other core actions (Original SUPER key bindings)
 bind = $mainMod, space, exec, ${inputs.noctalia.packages.${pkgs.system}.default}/bin/noctalia-shell ipc call launcher toggle
+bind = $mainMod, Escape, exec, /usr/bin/hyprlock
+
+# Notifications
 bind = $mainMod, n, exec, ${inputs.noctalia.packages.${pkgs.system}.default}/bin/noctalia-shell ipc call notifications toggleHistory
 bind = $mainMod SHIFT, n, exec, ${inputs.noctalia.packages.${pkgs.system}.default}/bin/noctalia-shell ipc call notifications toggleHistory
 bind = $mainMod ALT, n, exec, ${inputs.noctalia.packages.${pkgs.system}.default}/bin/noctalia-shell ipc call notifications clearAll
-bind = $mainMod, Q, killactive
+
+# Window Management (using SUPER key)
 bind = $mainMod, F, fullscreen
 bind = $mainMod, V, togglefloating
-# Escape: Lock Screen using System Path (Hyprlock)
-bind = $mainMod, Escape, exec, /usr/bin/hyprlock
 
 # --- Resizing ---
 # Quick Resize (SUPER + ALT + HJKL)

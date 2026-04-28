@@ -36,7 +36,7 @@
 
         # [SSH Detection] More robust check
         function is_ssh() {
-          [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" || -n "$SSH_CONNECTION" ]] || \
+          [[ -n "$SSH_CLIENT" || -n "$SSH_TTY" || -n "$SSH_CONNECTION" ]] || 
           [[ "$(ps -o comm= -p $PPID 2>/dev/null)" == "sshd" ]]
         }
 
@@ -125,21 +125,21 @@
       # [New] Nix cleanup alias
       nix-clean = "nix-env --delete-generations old && nix-store --gc";
 
-      zj_shortcuts = ''echo -e "\033[1;34m=== Zellij Custom Shortcuts (Tmux Style) ===\033[0m" && \
-                        echo -e "\033[1;33m[ Quick Actions (Alt Key) ]\033[0m" && \
-                        echo "  Alt + n       : New Pane (Right)" && \
-                        echo "  Alt + h/j/k/l : Move focus (Left/Down/Up/Right)" && \
-                        echo "  Alt + i/o     : Move Tab (Prev/Next)" && \
-                        echo "  Alt + =/-     : Resize Pane (Increase/Decrease)" && \
-                        echo -e "\033[1;33m[ Core Modes (Prefix) ]\033[0m" && \
-                        echo "  Ctrl + g      : LOCKED Mode (Essential for NeoVim!)" && \
-                        echo "  Ctrl + s      : SCROLL/COPY Mode (Like tmux prefix + [)" && \
-                        echo "                  -> v: Select, y/Enter: Copy" && \
-                        echo "  Ctrl + p      : PANE Mode (Split, Resize, etc.)" && \
-                        echo "  Ctrl + t      : TAB Mode (New, Rename, etc.)" && \
-                        echo "  Ctrl + n      : RESIZE Mode" && \
-                        echo "  Ctrl + o      : SESSION Mode" && \
-                        echo "  Ctrl + q      : QUIT Zellij" && \
+      zj_shortcuts = ''echo -e "\033[1;34m=== Zellij Custom Shortcuts (Tmux Style) ===\033[0m" && 
+                        echo -e "\033[1;33m[ Quick Actions (Alt Key) ]\033[0m" && 
+                        echo "  Alt + n       : New Pane (Right)" && 
+                        echo "  Alt + h/j/k/l : Move focus (Left/Down/Up/Right)" && 
+                        echo "  Alt + i/o     : Move Tab (Prev/Next)" && 
+                        echo "  Alt + =/-     : Resize Pane (Increase/Decrease)" && 
+                        echo -e "\033[1;33m[ Core Modes (Prefix) ]\033[0m" && 
+                        echo "  Ctrl + g      : LOCKED Mode (Essential for NeoVim!)" && 
+                        echo "  Ctrl + s      : SCROLL/COPY Mode (Like tmux prefix + [)" && 
+                        echo "                  -> v: Select, y/Enter: Copy" && 
+                        echo "  Ctrl + p      : PANE Mode (Split, Resize, etc.)" && 
+                        echo "  Ctrl + t      : TAB Mode (New, Rename, etc.)" && 
+                        echo "  Ctrl + n      : RESIZE Mode" && 
+                        echo "  Ctrl + o      : SESSION Mode" && 
+                        echo "  Ctrl + q      : QUIT Zellij" && 
                         echo -e "\033[1;32mTip: Bottom bar changes based on these modes!\033[0m" '';
     };
   };
