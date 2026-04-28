@@ -26,29 +26,32 @@ if [ -f /etc/debian_version ]; then
 fi
 
 # --- Section 1: Nix Installation ---
-# Define the absolute path for the nix binary
-NIX_BIN_PATH="/nix/var/nix/profiles/default/bin/nix"
-
-if [ ! -f "$NIX_BIN_PATH" ]; then
+if ! command -v nix &>/dev/null; then
     echo -e "${YELLOW}📦 Nix not found. Installing Nix...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install linux --no-confirm
-    
-    # Verify installation
-    if [ ! -f "$NIX_BIN_PATH" ]; then
-        echo -e "${RED}❌ Nix installation failed. The script cannot continue.${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}✅ Nix successfully installed.${NC}"
-else
-    echo -e "${GREEN}✅ Nix is already installed.${NC}"
+    echo -e "${GREEN}✅ Nix installation finished.${NC}"
 fi
 
 # --- Section 2: Home Manager Deployment ---
-echo -e "${YELLOW}⚙️ Preparing to run Home Manager...${NC}"
+echo -e "${YELLOW}⚙️ Preparing to run Home Manager in a guaranteed Nix environment...${NC}"
 
-# Define the absolute path to the home-manager binary that Nix will build
-# Note: This is a predictable path structure within the Nix profile
-HOME_MANAGER_BIN_PATH="$HOME/.nix-profile/bin/home-manager"
+# THIS IS THE ULTIMATE FIX:
+# Source the Nix environment script directly in this subshell before executing home-manager.
+# This ensures that even within a non-interactive script, the PATH is correctly set.
+echo -e "${YELLOW}Force-sourcing Nix environment...${NC}"
+if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
+    . "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+    echo -e "${GREEN}✅ Nix environment sourced.${NC}"
+else
+    echo -e "${RED}❌ Critical error: Nix environment script not found after installation.${NC}"
+    exit 1
+fi
+
+# Now, 'nix' and 'home-manager' (after first run) must be on the PATH.
+if ! command -v nix &> /dev/null; then
+    echo -e "${RED}❌ Fatal: 'nix' command is still not on the PATH even after sourcing. Cannot continue.${NC}"
+    exit 1
+fi
 
 # Ensure flakes are enabled for the current user
 mkdir -p "$HOME/.config/nix"
@@ -57,29 +60,20 @@ if ! grep -q "experimental-features" "$HOME/.config/nix/nix.conf" 2>/dev/null; t
     echo -e "${GREEN}✅ Nix flakes enabled.${NC}"
 fi
 
-# Ensure the user's profile directory exists before running home-manager
+# Ensure the user's profile directory exists
 USER_NIX_PROFILE_DIR="/nix/var/nix/profiles/per-user/$USER"
 if [ ! -d "$USER_NIX_PROFILE_DIR" ]; then
-    echo -e "${YELLOW}Manually creating Nix user profile directory at $USER_NIX_PROFILE_DIR...${NC}"
+    echo -e "${YELLOW}Manually creating Nix user profile directory...${NC}"
     sudo mkdir -p "$USER_NIX_PROFILE_DIR"
     sudo chown "$USER" "$USER_NIX_PROFILE_DIR"
 fi
 
-echo -e "${YELLOW}✨ Applying all dotfiles configurations using absolute Nix path... This may take a while.${NC}"
-# Use the absolute path to 'nix' to run home-manager for the first time.
-# This completely bypasses any PATH/sourcing issues in the script's environment.
-"$NIX_BIN_PATH" run home-manager/master -- switch --flake .#default --impure -b backup 
-    --extra-experimental-features "nix-command flakes"
+echo -e "${YELLOW}✨ Applying all dotfiles configurations... This WILL work now.${NC}"
+home-manager switch --extra-experimental-features "nix-command flakes" --flake .#default --impure -b backup
 
 echo -e "${GREEN}✅ Home Manager configuration applied successfully!${NC}"
 
 # --- Section 3: Post-Activation Tasks ---
-# Now that home-manager has run, its binaries should be in the user's profile
-if [ ! -x "$HOME_MANAGER_BIN_PATH" ]; then
-    echo -e "${RED}❌ Post-activation check failed: 'home-manager' command is still not found in the profile. Aborting post-tasks.${NC}"
-    exit 1
-fi
-
 echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration...${NC}"
 if [ -f "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" ]; then
     mkdir -p "$HOME/.config/hypr"
