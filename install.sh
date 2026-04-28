@@ -26,32 +26,23 @@ if [ -f /etc/debian_version ]; then
 fi
 
 # --- Section 1: Nix Installation ---
-if ! command -v nix &>/dev/null; then
+NIX_BIN_PATH="/nix/var/nix/profiles/default/bin/nix"
+
+if [ ! -f "$NIX_BIN_PATH" ]; then
     echo -e "${YELLOW}📦 Nix not found. Installing Nix...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install linux --no-confirm
+    
+    if [ ! -f "$NIX_BIN_PATH" ]; then
+        echo -e "${RED}❌ Nix installation failed. Cannot continue.${NC}"
+        exit 1
+    fi
     echo -e "${GREEN}✅ Nix installation finished.${NC}"
+else
+    echo -e "${GREEN}✅ Nix is already installed.${NC}"
 fi
 
 # --- Section 2: Home Manager Deployment ---
-echo -e "${YELLOW}⚙️ Preparing to run Home Manager in a guaranteed Nix environment...${NC}"
-
-# THIS IS THE ULTIMATE FIX:
-# Source the Nix environment script directly in this subshell before executing home-manager.
-# This ensures that even within a non-interactive script, the PATH is correctly set.
-echo -e "${YELLOW}Force-sourcing Nix environment...${NC}"
-if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
-    . "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-    echo -e "${GREEN}✅ Nix environment sourced.${NC}"
-else
-    echo -e "${RED}❌ Critical error: Nix environment script not found after installation.${NC}"
-    exit 1
-fi
-
-# Now, 'nix' and 'home-manager' (after first run) must be on the PATH.
-if ! command -v nix &> /dev/null; then
-    echo -e "${RED}❌ Fatal: 'nix' command is still not on the PATH even after sourcing. Cannot continue.${NC}"
-    exit 1
-fi
+echo -e "${YELLOW}⚙️ Preparing to run Home Manager...${NC}"
 
 # Ensure flakes are enabled for the current user
 mkdir -p "$HOME/.config/nix"
@@ -68,12 +59,24 @@ if [ ! -d "$USER_NIX_PROFILE_DIR" ]; then
     sudo chown "$USER" "$USER_NIX_PROFILE_DIR"
 fi
 
-echo -e "${YELLOW}✨ Applying all dotfiles configurations... This WILL work now.${NC}"
-home-manager switch --extra-experimental-features "nix-command flakes" --flake .#default --impure -b backup
+echo -e "${YELLOW}✨ Applying all dotfiles configurations using absolute Nix path... This may take a while.${NC}"
+
+# THIS IS THE ULTIMATE FIX:
+# We bypass all PATH and environment issues by using the absolute path to the nix binary
+# and asking it to run home-manager directly from github.
+# We also use '--flake .' (without #default) so it dynamically matches your username.
+"$NIX_BIN_PATH" --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake . --impure -b backup
 
 echo -e "${GREEN}✅ Home Manager configuration applied successfully!${NC}"
 
 # --- Section 3: Post-Activation Tasks ---
+# Source the profile just in case we need it for fnm or chsh in this script
+if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
+    . "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+elif [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+    . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+fi
+
 echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration...${NC}"
 if [ -f "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" ]; then
     mkdir -p "$HOME/.config/hypr"
@@ -91,7 +94,7 @@ if command -v fnm &> /dev/null; then
 fi
 
 echo -e "${YELLOW}⚙️ Setting Zsh as the default shell...${NC}"
-if NIX_ZSH_PATH=$(which zsh); then
+if NIX_ZSH_PATH=$(command -v zsh); then
     if ! grep -q "$NIX_ZSH_PATH" /etc/shells; then
         echo "$NIX_ZSH_PATH" | sudo tee -a /etc/shells > /dev/null
     fi
@@ -106,4 +109,3 @@ fi
 echo ""
 echo -e "${GREEN}🎉🎉🎉 Ultimate installation complete! All issues resolved.${NC}"
 echo -e "${BLUE}👉 Please reboot your system ('sudo reboot') and select 'Hyprland' at the login screen.${NC}"
-
