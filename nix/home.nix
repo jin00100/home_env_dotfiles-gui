@@ -1,9 +1,9 @@
-{ config, pkgs, username, homeDirectory, ... }:
+{ config, pkgs, username, ... }:
 
 {
   # [User Info - Dynamically passing from flake.nix]
   home.username = username;
-  home.homeDirectory = homeDirectory;
+  home.homeDirectory = "/home/${username}";
   home.stateVersion = "25.11"; 
 
   # [Module Loader] Load feature-specific files
