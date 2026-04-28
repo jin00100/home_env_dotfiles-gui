@@ -8,12 +8,12 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Starting dotfiles installation and setup...${NC}"
+echo -e "${BLUE}🚀 Starting Ultimate Dotfiles Installation...${NC}"
 
 # --- Section 0: System Dependencies ---
 if [ -f /etc/debian_version ]; then
     echo -e "${YELLOW}📦 Detecting Debian/Ubuntu. Installing system dependencies...${NC}"
-    sudo -v # Prompt for sudo password upfront
+    sudo -v
     sudo apt-get update
     sudo apt-get install -y curl git software-properties-common
     
@@ -26,46 +26,52 @@ if [ -f /etc/debian_version ]; then
 fi
 
 # --- Section 1: Nix Installation ---
-if ! command -v nix &> /dev/null; then
+# Define the absolute path for the nix binary
+NIX_BIN_PATH="/nix/var/nix/profiles/default/bin/nix"
+
+if [ ! -f "$NIX_BIN_PATH" ]; then
     echo -e "${YELLOW}📦 Nix not found. Installing Nix...${NC}"
-    # Use Determinate Systems installer for robust non-interactive installation
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install linux --no-confirm
     
-    # Crucial: The installer modifies system profiles. A re-login or reboot is typically needed.
-    # We will use 'su -l' to force a login shell for the user running the script to get the new PATH.
-    echo -e "${GREEN}✅ Nix installation finished.${NC}"
-    echo -e "${YELLOW}⏳ Preparing to apply configuration in a new login shell...${NC}"
-
-    # Re-invoke the rest of the script inside a fresh login shell for the current user.
-    # This is the most reliable way to get the Nix environment on the PATH.
-    # We pass the current directory to the sub-shell.
-    INSTALL_DIR=$(pwd)
-    sudo su -l "$USER" -c "cd '$INSTALL_DIR' && bash '$0' --post-nix-install"
-    exit 0
+    # Verify installation
+    if [ ! -f "$NIX_BIN_PATH" ]; then
+        echo -e "${RED}❌ Nix installation failed. The script cannot continue.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Nix successfully installed.${NC}"
+else
+    echo -e "${GREEN}✅ Nix is already installed.${NC}"
 fi
 
-# --- Section 2: Home Manager Deployment (and subsequent runs) ---
+# --- Section 2: Home Manager Deployment ---
+echo -e "${YELLOW}⚙️ Preparing to run Home Manager...${NC}"
 
-# This part of the script is either run if Nix was already installed,
-# or by the 'su -l' command from Section 1.
+# Define the absolute path to the home-manager binary that Nix will build
+# Note: This is a predictable path structure within the Nix profile
+HOME_MANAGER_BIN_PATH="$HOME/.nix-profile/bin/home-manager"
 
-if [[ "$1" == "--post-nix-install" ]]; then
-    echo -e "${GREEN}✅ Successfully re-executed in a new login shell.${NC}"
-fi
-
-echo -e "${GREEN}✅ Nix is available on the PATH.${NC}"
-
-# Ensure flakes are enabled
-if [ ! -d "$HOME/.config/nix" ] || ! grep -q "experimental-features" "$HOME/.config/nix/nix.conf" 2>/dev/null; then
-    echo -e "${YELLOW}⚙️ Enabling Nix flakes for user $USER...${NC}"
-    mkdir -p "$HOME/.config/nix"
+# Ensure flakes are enabled for the current user
+mkdir -p "$HOME/.config/nix"
+if ! grep -q "experimental-features" "$HOME/.config/nix/nix.conf" 2>/dev/null; then
     echo "experimental-features = nix-command flakes" >> "$HOME/.config/nix/nix.conf"
+    echo -e "${GREEN}✅ Nix flakes enabled.${NC}"
 fi
 
-echo -e "${YELLOW}✨ Applying all dotfiles configurations... This may take a while.${NC}"
-home-manager switch --extra-experimental-features "nix-command flakes" --flake .#default --impure -b backup
+echo -e "${YELLOW}✨ Applying all dotfiles configurations using absolute Nix path... This may take a while.${NC}"
+# Use the absolute path to 'nix' to run home-manager for the first time.
+# This completely bypasses any PATH/sourcing issues in the script's environment.
+"$NIX_BIN_PATH" run home-manager/master -- switch --flake .#default --impure -b backup 
+    --extra-experimental-features "nix-command flakes"
+
+echo -e "${GREEN}✅ Home Manager configuration applied successfully!${NC}"
 
 # --- Section 3: Post-Activation Tasks ---
+# Now that home-manager has run, its binaries should be in the user's profile
+if [ ! -x "$HOME_MANAGER_BIN_PATH" ]; then
+    echo -e "${RED}❌ Post-activation check failed: 'home-manager' command is still not found in the profile. Aborting post-tasks.${NC}"
+    exit 1
+fi
+
 echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration...${NC}"
 if [ -f "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" ]; then
     mkdir -p "$HOME/.config/hypr"
@@ -96,6 +102,6 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}🎉 All done! Dotfiles installation is complete.${NC}"
+echo -e "${GREEN}🎉🎉🎉 Ultimate installation complete! All issues resolved.${NC}"
 echo -e "${BLUE}👉 Please reboot your system ('sudo reboot') and select 'Hyprland' at the login screen.${NC}"
 
