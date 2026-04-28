@@ -8,6 +8,26 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Self-bootstrap: If Nix isn't on the PATH, but this is the second run,
+# it means we need to source the environment first.
+if [ "$1" != "--re-executed" ] && ! command -v nix &> /dev/null; then
+    # Try to find and source the Nix profile
+    if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
+        source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
+    elif [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+        source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+    fi
+fi
+
+# Re-execute under a login shell if Nix is still not available after sourcing
+if [ "$1" != "--re-executed" ] && ! command -v nix &> /dev/null; then
+    echo -e "${YELLOW}Nix not found. Re-executing script in a login shell to ensure correct environment...${NC}"
+    # Use bash -l to simulate a login shell which should correctly source /etc/profile.d
+    bash -l "$0" --re-executed
+    exit 0
+fi
+
+
 echo -e "${BLUE}🚀 Starting dotfiles installation and setup...${NC}"
 
 # 0. Install System Dependencies (Ubuntu/Debian)
@@ -36,33 +56,25 @@ else
     echo -e "${YELLOW}Please ensure curl, git, and Hyprland engines are installed manually.${NC}"
 fi
 
-# 1. Try loading Nix environment early in case it's installed but not in PATH
-if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
-    source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-elif [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
-    source "$HOME/.nix-profile/etc/profile.d/nix.sh"
-fi
-export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
-
-# 2. Check for Nix Package Manager
+# 1. Check for Nix Package Manager
 if ! command -v nix &> /dev/null; then
     echo -e "${YELLOW}🧹 Cleaning up previous failed Nix installation residues (if any)...${NC}"
     sudo find /etc ~/ -name "*.backup-before-nix" -type f -delete 2>/dev/null || true
 
     echo -e "${YELLOW}📦 Nix is not installed. Installing Nix...${NC}"
-    sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+    # Using Determinate Systems installer for better non-interactive installation
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install linux --no-confirm
     
-    # Load Nix environment immediately after installation to bypass restart requirement
-    if [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
-        source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
-    fi
-    export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
-    
-    echo -e "${GREEN}✅ Nix installation complete and automatically loaded into current session!${NC}"
+    echo -e "${GREEN}✅ Nix installation complete. The script will re-execute to load the new environment.${NC}"
+    # Re-execute the script in a login shell to ensure Nix is on the PATH
+    exec bash -l "$0" --re-executed
 fi
 
-# Ensure flakes are enabled
-if ! grep -q "flakes" ~/.config/nix/nix.conf 2>/dev/null; then
+# We are now sure Nix is on the PATH
+echo -e "${GREEN}✅ Nix is available on the PATH.${NC}"
+
+# 2. Ensure flakes are enabled
+if ! nix path-info --extra-experimental-features "nix-command flakes" . &>/dev/null; then
     echo -e "${YELLOW}⚙️ Enabling Nix flakes...${NC}"
     mkdir -p ~/.config/nix
     echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
@@ -70,12 +82,10 @@ fi
 
 # 3. Apply Home Manager Configuration
 echo -e "${YELLOW}✨ Applying all dotfiles configurations... This may take a while.${NC}"
-# Use the full command to avoid any alias issues and ensure all experimental features are enabled.
 home-manager switch --extra-experimental-features "nix-command flakes" --flake .#default --impure -b backup
 
 # 4. Fortify Hyprland Configuration (Final Fix)
 echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration to prevent fallback error...${NC}"
-# This creates a hard copy of the config as a fallback, ensuring Hyprland finds it even if environment variables are not perfectly sourced.
 if [ -f "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" ]; then
     mkdir -p "$HOME/.config/hypr"
     cp "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf"
@@ -85,12 +95,10 @@ else
 fi
 
 # 5. Source newly updated environment variables
+# This step is mostly for the current script's context if needed
 if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
     source "$HOME/.nix-profile/etc/profile.d/nix.sh"
-elif [ -e "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh" ]; then
-    source "/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"
 fi
-export PATH="$HOME/.nix-profile/bin:$PATH"
 
 # 6. Auto-install Node.js (via fnm)
 if command -v fnm &> /dev/null; then
