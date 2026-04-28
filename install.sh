@@ -64,8 +64,9 @@ echo -e "${YELLOW}✨ Applying all dotfiles configurations using absolute Nix pa
 # THIS IS THE ULTIMATE FIX:
 # We bypass all PATH and environment issues by using the absolute path to the nix binary
 # and asking it to run home-manager directly from github.
+# We also explicitly pass the PATH so the internal scripts of home-manager can find 'nix'.
 # We also use '--flake .' (without #default) so it dynamically matches your username.
-"$NIX_BIN_PATH" --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake . --impure -b backup
+PATH="/nix/var/nix/profiles/default/bin:$PATH" "$NIX_BIN_PATH" --extra-experimental-features "nix-command flakes" run github:nix-community/home-manager -- switch --flake . --impure -b backup
 
 echo -e "${GREEN}✅ Home Manager configuration applied successfully!${NC}"
 
