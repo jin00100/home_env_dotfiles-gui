@@ -57,6 +57,14 @@ if ! grep -q "experimental-features" "$HOME/.config/nix/nix.conf" 2>/dev/null; t
     echo -e "${GREEN}✅ Nix flakes enabled.${NC}"
 fi
 
+# Ensure the user's profile directory exists before running home-manager
+USER_NIX_PROFILE_DIR="/nix/var/nix/profiles/per-user/$USER"
+if [ ! -d "$USER_NIX_PROFILE_DIR" ]; then
+    echo -e "${YELLOW}Manually creating Nix user profile directory at $USER_NIX_PROFILE_DIR...${NC}"
+    sudo mkdir -p "$USER_NIX_PROFILE_DIR"
+    sudo chown "$USER" "$USER_NIX_PROFILE_DIR"
+fi
+
 echo -e "${YELLOW}✨ Applying all dotfiles configurations using absolute Nix path... This may take a while.${NC}"
 # Use the absolute path to 'nix' to run home-manager for the first time.
 # This completely bypasses any PATH/sourcing issues in the script's environment.
