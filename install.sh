@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -e
+set -eo pipefail
+
+# Ensure script runs from its own directory so '--flake .' works anywhere
+cd "$(dirname "$0")"
 
 # Terminal Colors
 RED='\033[0;31m'
@@ -17,7 +20,7 @@ if [ -f /etc/debian_version ]; then
     sudo apt-get update
     sudo apt-get install -y curl git software-properties-common
     
-    if ! grep -q "^deb .*cppiber/hyprland" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
+    if ! grep -q -E "cppiber/hyprland" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
         sudo add-apt-repository -y ppa:cppiber/hyprland
     fi
     sudo apt-get update
@@ -78,13 +81,14 @@ elif [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
     . "$HOME/.nix-profile/etc/profile.d/nix.sh"
 fi
 
-echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration...${NC}"
+echo -e "${YELLOW}🛡️ Fortifying Hyprland configuration (Symlinking)...${NC}"
 if [ -f "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" ]; then
     mkdir -p "$HOME/.config/hypr"
-    cp "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf"
-    echo -e "${GREEN}✅ Hyprland configuration fortified.${NC}"
+    # Create symlink so future Nix updates apply automatically without running this script again
+    ln -sf "$HOME/.nix-profile/etc/xdg/hypr/hyprland.conf" "$HOME/.config/hypr/hyprland.conf"
+    echo -e "${GREEN}✅ Hyprland configuration symlinked.${NC}"
 else
-    echo -e "${RED}⚠️ Could not find generated Hyprland config. Your Hyprland session may not start correctly.${NC}"
+    echo -e "${YELLOW}⚠️ Could not find generated Hyprland config in Nix profile. Assuming Home Manager manages it natively.${NC}"
 fi
 
 if command -v fnm &> /dev/null; then
