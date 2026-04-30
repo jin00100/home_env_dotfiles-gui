@@ -15,7 +15,8 @@ $mainMod = SUPER
 
 # --- Keybindings (Direct & Reliable) ---
 # Terminal & Close Window (Your custom bindings)
-bind = CONTROL ALT, T, exec, env GSK_RENDERER=cairo ${pkgs.ghostty}/bin/ghostty
+# Temporary VM Fallback: using 'foot' (CPU rendering) instead of 'ghostty' (requires GPU)
+bind = CONTROL ALT, T, exec, ${pkgs.foot}/bin/foot
 bind = CONTROL ALT, Q, killactive
 
 # Launcher, Lock Screen, and other core actions (Original SUPER key bindings)
