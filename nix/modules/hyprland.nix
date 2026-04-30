@@ -15,8 +15,8 @@ $mainMod = SUPER
 
 # --- Keybindings (Direct & Reliable) ---
 # Terminal & Close Window (Your custom bindings)
-# Temporary VM Fallback: using 'foot' (CPU rendering) instead of 'ghostty' (requires GPU)
-bind = CONTROL ALT, T, exec, ${pkgs.foot}/bin/foot
+# Terminal (Ghostty wrapped with nixGL for real machine hardware acceleration)
+bind = CONTROL ALT, T, exec, ~/.nix-profile/bin/nixGL ${pkgs.ghostty}/bin/ghostty
 bind = CONTROL ALT, Q, killactive
 
 # Launcher, Lock Screen, and other core actions (Original SUPER key bindings)

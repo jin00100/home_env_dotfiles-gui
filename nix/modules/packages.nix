@@ -60,6 +60,5 @@
     brightnessctl
     pavucontrol
     gitui
-    foot # Fallback terminal for VM testing without OpenGL
   ];
 }
