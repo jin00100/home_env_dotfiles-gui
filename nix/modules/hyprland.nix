@@ -15,7 +15,7 @@ $mainMod = SUPER
 
 # --- Keybindings (Direct & Reliable) ---
 # Terminal & Close Window (Your custom bindings)
-bind = CONTROL ALT, T, exec, ${pkgs.ghostty}/bin/ghostty
+bind = CONTROL ALT, T, exec, env GSK_RENDERER=cairo ${pkgs.ghostty}/bin/ghostty
 bind = CONTROL ALT, Q, killactive
 
 # Launcher, Lock Screen, and other core actions (Original SUPER key bindings)
